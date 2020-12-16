@@ -11,6 +11,7 @@ use Magento\Framework\App\MaintenanceMode;
 use Magento\Framework\App\ObjectManager;
 use Magento\Framework\App\ResponseInterface;
 use Magento\Framework\DataObject\IdentityInterface;
+use Magento\Framework\View\Element\AbstractBlock;
 use Magento\Framework\View\Layout;
 use Magento\PageCache\Model\Config;
 use Magento\PageCache\Model\Spi\PageCacheTagsPreprocessorInterface;
@@ -87,12 +88,14 @@ class LayoutPlugin
             $tags = [];
             $isVarnish = $this->config->getType() === Config::VARNISH;
 
+            /** @var AbstractBlock $block */
             foreach ($subject->getAllBlocks() as $block) {
-                if ($block instanceof IdentityInterface) {
-                    $isEsiBlock = $block->getTtl() > 0;
-                    if ($isVarnish && $isEsiBlock) {
-                        continue;
-                    }
+                if ($isVarnish && $block->getTtl() > 0) {
+                    continue;
+                }
+                if ($block instanceof AbstractBlock) {
+                    $tags[] = $block->getCacheTags();
+                } elseif ($block instanceof IdentityInterface) {
                     $tags[] = $block->getIdentities();
                 }
             }
