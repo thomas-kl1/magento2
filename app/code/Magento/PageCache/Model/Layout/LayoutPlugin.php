@@ -10,11 +10,13 @@ namespace Magento\PageCache\Model\Layout;
 use Magento\Framework\App\MaintenanceMode;
 use Magento\Framework\App\ObjectManager;
 use Magento\Framework\App\ResponseInterface;
+use Magento\Framework\DataObject;
 use Magento\Framework\DataObject\IdentityInterface;
-use Magento\Framework\View\Element\AbstractBlock;
+use Magento\Framework\View\Element\BlockInterface;
 use Magento\Framework\View\Layout;
 use Magento\PageCache\Model\Config;
 use Magento\PageCache\Model\Spi\PageCacheTagsPreprocessorInterface;
+use function array_merge;
 
 /**
  * Append cacheable pages response headers.
@@ -68,7 +70,7 @@ class LayoutPlugin
      * @param Layout $subject
      * @return void
      */
-    public function afterGenerateElements(Layout $subject)
+    public function afterGenerateElements(Layout $subject): void
     {
         if ($subject->isCacheable() && !$this->maintenanceMode->isOn() && $this->config->isEnabled()) {
             $this->response->setPublicHeaders($this->config->getTtl());
@@ -88,15 +90,13 @@ class LayoutPlugin
             $tags = [];
             $isVarnish = $this->config->getType() === Config::VARNISH;
 
-            /** @var AbstractBlock $block */
+            /** @var BlockInterface[] $block */
             foreach ($subject->getAllBlocks() as $block) {
-                if ($isVarnish && $block->getTtl() > 0) {
-                    continue;
-                }
-                if ($block instanceof AbstractBlock) {
-                    $tags[] = $block->getCacheTags();
-                } elseif ($block instanceof IdentityInterface) {
-                    $tags[] = $block->getIdentities();
+                if (!$isVarnish || ($block instanceof DataObject && !$block->getData('ttl'))) {
+                    $tags[] = (array) $block->getData('cache_tags');
+                    if ($block instanceof IdentityInterface) {
+                        $tags[] = $block->getIdentities();
+                    }
                 }
             }
             $tags = array_unique(array_merge([], ...$tags));
