@@ -17,6 +17,8 @@ use Magento\Framework\View\Layout;
 use Magento\PageCache\Model\Config;
 use Magento\PageCache\Model\Spi\PageCacheTagsPreprocessorInterface;
 use function array_merge;
+use function array_unique;
+use function implode;
 
 /**
  * Append cacheable pages response headers.
@@ -81,10 +83,10 @@ class LayoutPlugin
      * Retrieve all identities from blocks for further cache invalidation.
      *
      * @param Layout $subject
-     * @param mixed $result
-     * @return mixed
+     * @param string $result
+     * @return string
      */
-    public function afterGetOutput(Layout $subject, $result)
+    public function afterGetOutput(Layout $subject, string $result): string
     {
         if ($subject->isCacheable() && $this->config->isEnabled()) {
             $tags = [];
