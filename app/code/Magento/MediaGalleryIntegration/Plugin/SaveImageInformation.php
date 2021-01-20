@@ -16,8 +16,11 @@ use Magento\MediaGalleryApi\Api\IsPathExcludedInterface;
 use Magento\MediaGallerySynchronizationApi\Api\SynchronizeFilesInterface;
 use Magento\MediaGalleryUiApi\Api\ConfigInterface;
 use Psr\Log\LoggerInterface;
+use function implode;
 use function ltrim;
+use function preg_match;
 use function rtrim;
+use function strpos;
 
 /**
  * Save image information by SaveAssetsInterface.
